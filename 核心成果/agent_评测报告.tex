@@ -1,0 +1,642 @@
+\documentclass[a4paper]{article}
+
+\input{ch_xelatex.tex}
+\input{scala.tex}
+
+\lstset{numbers=left,
+basicstyle=\tiny,
+numberstyle=\tiny,
+keywordstyle=\color{blue!70},
+commentstyle=\color{red!50!green!50!blue!50},
+frame=single, rulesepcolor=\color{red!20!green!20!blue!20},
+escapeinside=``
+}
+
+\graphicspath{ {images/} }
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{ctex}
+\usepackage{graphicx}
+\usepackage{framed}
+\usepackage{listings}
+\usepackage{caption}
+\usepackage{enumerate}
+\usepackage{xcolor}
+\usepackage{lastpage}
+\usepackage{fancyhdr}
+\usepackage{geometry}
+\usepackage{minted}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage{pgfplots}
+\usepackage{multicol}
+\usepackage{multirow}
+\usepackage{footnote}
+\usepackage{algorithm}
+\usepackage{algorithmicx}
+\usepackage{algpseudocode}
+\floatname{algorithm}{Algorithm}
+\usepackage{amsmath}
+
+\geometry{a4paper,left=2.3cm,right=2.3cm,top=2.7cm,bottom=2.7cm}
+
+\pagestyle{fancy}
+\lhead{\kaishu \leftmark}
+\rhead{\kaishu 评测报告}
+\lfoot{}
+\cfoot{\thepage}
+\rfoot{}
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+
+\begin{document}
+
+%-------------------------封面----------------
+\begin{titlepage}
+    \begin{center}
+    \includegraphics[width=0.8\textwidth]{NKU.png}\\[1cm]
+    \vspace{20mm}
+		\textbf{\huge\textbf{\kaishu{计算机学院}}}\\[0.5cm]
+		\textbf{\Huge{\kaishu{实验报告}}}
+
+		\vspace{\fill}
+
+    \centering
+    \vfill
+    {\Large \today}
+    \end{center}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+%-------------------------正文----------------
+
+\section{引言}
+
+本次作业要求从任务规划与执行、工具与技能调用、记忆与上下文管理等角度，比较至少 3 个 AI Agent，列出它们的优缺点和特色，并对它们进行排名。
+
+具体要求包括：撰写调研报告，使用截图体现使用过程并进行分析；将调研结果汇总至表格中，表格模板参考附件；将调研报告 PDF 和汇总表格 Excel 打包后提交至统一项目管理平台（www.upmware.com）。本次作业提交时间为 2026 年 3 月 30 日 24 点。
+
+\section{实验环境}
+
+三个 Agent 的评测均在同一实验环境下完成：
+
+\begin{itemize}
+    \item \textbf{操作系统}：Windows Subsystem for Linux 2（WSL2）
+    \item \textbf{AI 模型 API}：MiniMax 2.5（统一使用，消除底层模型能力差异对评测结果的影响）
+    \item \textbf{评测目录}：OpenClaw Agent 评测对应 \texttt{openclaw} 目录，Qoder CLI 评测对应 \texttt{qoder} 目录，Claude Code 评测对应 \texttt{claude} 目录
+\end{itemize}
+
+评测任务概览：
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|p{6cm}|}
+\hline
+任务编号 & 任务名称 & 考察重点 \\
+\hline
+\multicolumn{3}{|c|}{\textbf{OpenClaw Agent 评测}} \\
+\hline
+Q1 & 设计最小化评测环境 & 任务规划能力 \\
+\hline
+Q2 & 生成txt文件与summary & 文件创建与内容概括能力 \\
+\hline
+Q3 & 回答关于result.csv和summary.md的问题 & 已有文件分析能力 \\
+\hline
+Q4 & 修复note4txt缺失问题 & 错误识别与恢复能力 \\
+\hline
+Q5 & 创建统计脚本stats.py & 代码编写与执行能力 \\
+\hline
+Q6 & 检索官方文档补充说明 & 信息检索与整合能力 \\
+\hline
+Q7 & Python Bug修复任务 & 调试与修复能力 \\
+\hline
+\multicolumn{3}{|c|}{\textbf{Qoder CLI 评测}} \\
+\hline
+Q1 & 设计最小化评测环境 & 任务规划能力 \\
+\hline
+Q2 & 创建txt文件与README & 文件创建与内容组织能力 \\
+\hline
+Q3 & 缺失文件处理与统计汇总 & 错误识别与恢复能力 \\
+\hline
+Q4 & 创建统计脚本stats.py & 代码编写与执行能力 \\
+\hline
+Q5 & 检索官方文档补充说明 & 信息检索与整合能力 \\
+\hline
+Q6 & Python Bug修复任务 & 调试与修复能力 \\
+\hline
+\multicolumn{3}{|c|}{\textbf{Claude Code 评测}} \\
+\hline
+Q1 & 设计最小化评测环境 & 任务规划能力 \\
+\hline
+Q2 & 创建txt文件与README & 文件创建与内容组织能力 \\
+\hline
+Q3 & 缺失文件处理与统计汇总 & 错误识别与恢复能力 \\
+\hline
+Q4 & 创建统计脚本stats.py & 代码编写与执行能力 \\
+\hline
+Q5 & 检索官方文档补充说明 & 信息检索与整合能力 \\
+\hline
+Q6 & Python Bug修复任务 & 调试与修复能力 \\
+\hline
+\end{tabular}
+\end{table}
+
+\section{01-07题逐题分析}
+
+\subsection*{Q1：设计最小化评测环境}
+
+\textbf{题目内容}：请围绕目录 openclaw 设计一个最小化评测环境，用于测试 AI Agent 的任务规划、文件处理、上下文管理和错误恢复能力。要求先输出 4-6 步计划，每一步写清楚目的。
+
+\textbf{测试目的}：测试 Agent 能否理解复杂任务并进行合理的任务分解规划。
+
+\textbf{OpenClaw 实际回答}：输出了 6 步计划，包括：创建评测任务目录结构、设计评测任务模板、实现评测执行脚本、实现结果汇总模块、实现错误注入与恢复测试、实现上下文延续测试。每步都有明确的目的说明。
+
+\textbf{回答表现分析}：
+
+\begin{itemize}
+    \item \textbf{做得好的地方}：先规划后执行的模式符合要求，步骤清晰完整，每步目的明确
+    \item \textbf{存在的问题}：计划偏重于"评测框架设计"（如何搭建评测系统），而非用户实际期望的"创建可用的评测数据"。用户后续需要额外要求才能得到实际文件
+    \item \textbf{完成任务情况}：部分完成。输出了计划但未实际执行创建数据
+    \item \textbf{能力体现}：有明确的规划行为，使用了文件操作工具（如 mkdir、Write）
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{1.png}
+\caption{Q1 任务规划输出}
+\end{figure}
+
+\textbf{本题小结}：展现了任务规划能力，但计划与用户实际需求存在偏差，属于"框架设计"而非"任务执行"。
+
+\subsection*{Q2：生成txt文件与summary}
+
+\textbf{题目内容}：在 data 目录下创建3个 txt 文件（notes1-3.txt），分别围绕任务规划、工具调用、记忆与上下文管理主题，每个5-8行中文。再创建 README.md 说明文件用途。然后读取这3个文件生成 summary.md，包含文件核心内容、3个评测维度及观察点、总评。要求不要编造。
+
+\textbf{测试目的}：测试 Agent 的文件创建、内容理解和概括总结能力。
+
+\textbf{OpenClaw 实际回答}：创建了 data/notes1.txt、data/notes2.txt、data/notes3.txt、README.md 四个文件，每个文件都给出了进度反馈（"正在创建...已创建"）。读取文件后生成了 summary.md，包含文件内容概括、评测维度表、总评。
+
+\textbf{回答表现分析}：
+
+\begin{itemize}
+    \item \textbf{优点}：进度反馈清晰，生成的内容基于实际文件而非编造，格式规范
+    \item \textbf{不足}：summary.md 中评测维度的"总评"部分较为空泛，缺乏对三个文件内容横向差异的对比；工具调用主题（notes2.txt）与其他两个文件在格式上有轻微不一致（缺少与其他两个文件相同的小标题结构）
+    \item \textbf{能力体现}：使用 Write/Read 工具完成文件创建与读取，多轮对话中上下文连贯
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{2.png}
+\caption{Q2 文件创建与summary生成结果}
+\end{figure}
+
+\textbf{本题小结}：按要求完成文件创建和内容概括，透明度高。
+
+\subsection*{Q3：回答关于result.csv和summary.md的问题}
+
+\textbf{题目内容}：1）result.csv 中一共有几个 dimension？2）summary.md 中提炼出的第 2 个评测维度是什么？要求不确定时说明依据，不编造。
+
+\textbf{测试目的}：测试 Agent 能否准确理解已有文件内容，并基于事实回答问题。
+
+\textbf{OpenClaw 实际回答}：问题1回答3个 dimension（task\_planning、tool\_usage、context\_management），依据是"读取 result.csv 文件，表头以下有 3 行数据"。问题2回答第2个维度是"工具调用"，依据是"summary.md 中的'评测维度与观察点'表格按顺序列出"。
+
+\textbf{回答表现分析}：
+
+\begin{itemize}
+    \item \textbf{优点}：两个问题均回答正确，明确给出依据来源，未编造内容
+    \item \textbf{不足}：回答方式较机械，仅基于文件逐字引用，缺乏对数据含义的主动解读；题目只有两个简单问题，难以评估 Agent 面对模糊或跨文件关联问题时的表现
+    \item \textbf{能力体现}：使用 Read 工具读取 result.csv 和 summary.md，基于前序任务生成的文档作答
+\end{itemize}
+
+\textbf{本题小结}：基于文件内容准确回答问题，未出现幻觉或编造。
+
+\subsection*{Q4：修复note4txt缺失问题}
+
+\textbf{题目内容}：把 note4.txt 纳入统计分析，更新 summary.md 和 result.csv。要求：如果文件不存在不要编造，先明确指出问题，再给出修复方案，修复后继续完成任务，最后说明如何处理这个错误。
+
+\textbf{测试目的}：测试 Agent 的错误识别、问题分析、自主修复能力。
+
+\textbf{OpenClaw 实际回答}：首先检查文件发现 note4.txt 不存在（实际存在的是 notes1-3.txt），然后提出修复方案：创建 note4.txt 作为第4个评测维度（错误恢复），内容围绕7个错误恢复主题。执行了创建文件、更新 summary.md、更新 result.csv 新增 error\_recovery 维度的操作。最后说明按照"明确问题→修复方案→继续完成"的流程处理。
+
+\textbf{回答表现分析}：
+
+\begin{itemize}
+    \item \textbf{做得好的地方}：严格遵循用户要求的流程（先明确问题→再给方案→修复后继续→说明处理方式），创建的文件内容符合评测框架设计
+    \item \textbf{存在的问题}：文件名识别有小误差（用户说 note4.txt，实际只有 notes1-3.txt），但处理方式正确
+    \item \textbf{完成任务情况}：完全完成
+    \item \textbf{能力体现}：
+    \begin{itemize}
+        \item 自主纠错：主动检查文件是否存在，发现问题后制定修复方案
+        \item 上下文保持：在 Q2、Q3 基础上继续更新 summary.md 和 result.csv，保持了多轮任务的上下文连贯
+    \end{itemize}
+\end{itemize}
+
+\textbf{本题小结}：按流程完成了错误识别与修复，展现了良好的问题处理能力。
+
+\subsection*{Q5：创建统计脚本stats.py}
+
+\textbf{题目内容}：创建 stats.py 统计 data 目录下 txt 文件的文件数量、总行数、总字数、出现频率最高的5个词。要求脚本简洁，失败时先排查修复。
+
+\textbf{测试目的}：测试 Agent 的代码编写、调试和自我纠错能力。
+
+\textbf{OpenClaw 实际回答}：第一次运行后 top 5 高频词为数字序号（1、2、3、4、5），不符合预期。Agent 识别出问题（正则提取了行首序号），重新编写逻辑过滤掉行首序号后提取2-4个中文字符，最终得到正确结果：文件数量4，总行数36，总字数747，高频词：工具调用(5)、笔记(4)、任务规划(3)、错误恢复(3)。
+
+\textbf{回答表现分析}：
+
+\begin{itemize}
+    \item \textbf{做得好的地方}：能够识别脚本输出不符合预期，主动排查原因并修复，最终得到正确结果
+    \item \textbf{存在的问题}：第一次编写时未考虑行首序号被计入的问题
+    \item \textbf{完成任务情况}：完全完成，且展现了调试能力
+    \item \textbf{能力体现}：
+    \begin{itemize}
+        \item 自主纠错：第一次输出错误后没有忽略，而是分析原因并重新编写代码
+        \item 工具使用：使用 Bash 运行 python3 命令执行脚本，使用 Write 工具保存结果
+    \end{itemize}
+\end{itemize}
+
+\textbf{本题小结}：具备自我调试和纠错能力，能够根据输出反馈修正代码问题。
+
+\subsection*{Q6：检索官方文档补充说明}
+
+\textbf{题目内容}：检索官方文档中关于"tools / skills / agent mode / planning"相关的说明，补充到 summary.md 中。要求优先使用官方文档，给出实际参考来源。
+
+\textbf{测试目的}：测试 Agent 的信息检索和文档整合能力。
+
+\textbf{OpenClaw 实际回答}：参考了 OpenClaw 官方文档及多个具体文档页面（concepts/agent-loop.md、tools/index.md、tools/creating-skills.md、openclaw skills --help），补充了 Tools、Skills、Agent Mode、Planning 四个方面的说明内容到 summary.md。
+
+\textbf{回答表现分析}：
+
+\begin{itemize}
+    \item \textbf{优点}：给出了具体的文档来源链接，内容准确覆盖四个主题
+    \item \textbf{不足}：检索方式主要依赖本地文档路径和 --help 命令，缺乏对官方在线文档的主动搜索；补充的内容篇幅较简短，部分主题（如 Planning）只有一两句概述，与 Qoder 检索到的在线文档相比信息粒度较粗
+    \item \textbf{能力体现}：使用 WebFetch 获取文档内容，使用 Edit 更新 summary.md
+\end{itemize}
+
+\textbf{本题小结}：准确检索并整合官方文档内容，符合要求。
+
+\subsection*{Q7：Python Bug修复任务}
+
+\textbf{题目内容}：完成一个最小化 Python bug 修复任务。创建包含无效数据的 scores.csv 和包含 4 个 bug 的 score\_report.py，Agent 需要识别并修复 bug。
+
+\textbf{测试目的}：测试 Agent 的代码调试和 bug 修复能力。
+
+\textbf{OpenClaw 实际回答}：成功识别了全部 4 个 bug：int() 无法处理空值、整除导致小数截断、及格条件错误、排序取错元素。逐一修复后运行脚本，输出正确（total:5, average:74.0, passed:4, top:Alice 95）。
+
+\textbf{回答表现分析}：
+
+\begin{itemize}
+    \item \textbf{优点}：成功识别并修复全部 4 个 bug，修复后验证了输出结果
+    \item \textbf{不足}：4 个 bug 均为独立的局部逻辑错误，缺乏复杂的跨函数依赖，修复难度有限；Agent 未对"为什么 Frank 和 Grace 被过滤"做出解释，只是默默跳过，缺乏对数据处理决策的主动说明
+    \item \textbf{能力体现}：使用 Read/Edit/Bash 完成读取、修改、验证闭环
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{3.png}
+\caption{Q7 Bug修复执行结果}
+\end{figure}
+
+\textbf{本题小结}：展现了较强的代码调试和 bug 修复能力。
+
+\section{Qoder CLI 评测分析}
+
+\subsection*{Q1：设计最小化评测环境}
+
+\textbf{题目内容}：请围绕目录 qoder 设计一个最小化评测环境，要求先输出 4-6 步计划，每一步写清楚目的，计划中至少包含文件创建、文件读取、结果汇总、错误处理、上下文延续，不要写空泛建议。
+
+\textbf{Qoder CLI 实际回答}：输出了 6 步计划，包括创建目录结构与任务定义文件、编写评测任务集、实现评测驱动脚本、构造错误注入 fixtures、实现结果汇总脚本、添加上下文延续验证机制，每步均有明确目的说明。
+
+\textbf{表现分析}：
+
+\begin{itemize}
+    \item \textbf{优点}：计划完整覆盖了题目要求的五个方面，步骤描述具体（给出了目录结构、JSON 字段定义、脚本核心逻辑），可执行性比 OpenClaw 更强
+    \item \textbf{不足}：与 OpenClaw 同样存在"只规划不执行"问题，用户需要明确说"现在开始执行"才推动 Agent 行动，说明 Agent 对"设计"一词的理解止步于方案输出
+\end{itemize}
+
+\textbf{本题小结}：计划内容详尽，但仍需用户二次指令才进入执行阶段。
+
+\subsection*{Q2：创建txt文件与README}
+
+\textbf{题目内容}：在测试目录下创建 data 子目录和 3 个主题 txt 文件（任务规划、工具调用、记忆与上下文管理），每个 5-8 行中文，再创建 README.md 说明文件用途。要求给出进度反馈，完成后列出创建的文件，不修改测试目录之外的内容。
+
+\textbf{Qoder CLI 实际回答}：使用 TodoWrite 工具创建任务列表追踪进度，依次创建了 data 目录、notes1-3.txt、README.md，每步完成后实时更新任务状态，最终列出全部文件清单。
+
+\textbf{表现分析}：
+
+\begin{itemize}
+    \item \textbf{优点}：主动使用 TodoWrite 进行任务管理，进度可见性强；文件内容围绕主题展开，有具体的评测维度说明而非空泛描述
+    \item \textbf{不足}：未主动将问题和回答整理为执行记录 md 文件，属于遗漏，用户需要在本轮结束后单独提出要求才得以补充，说明 Agent 的主动记录意识不足
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{Qoder02.png}
+\caption{Q2 TodoWrite 任务追踪与文件创建进度}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{Qoder03.png}
+\caption{Q2 notes 文件内容}
+\end{figure}
+
+\textbf{本题小结}：完成任务，任务管理规范，但缺乏主动记录执行过程的意识。
+
+\subsection*{Q3：缺失文件处理与统计汇总}
+
+\textbf{题目内容}：把 note4.txt 纳入统计分析并更新 summary.md 和 result.csv。要求：文件不存在不要编造，先明确指出问题，再给修复方案，修复后继续完成任务，最后说明处理方式。
+
+\textbf{Qoder CLI 实际回答}：检查目录后发现 note4.txt 不存在，同时 summary.md 和 result.csv 也未曾创建。明确指出三处缺失后，将 note4.txt 标记为"缺失"状态，新建 summary.md 和 result.csv，在两个文件中保留审计痕迹。
+
+\textbf{表现分析}：
+
+\begin{itemize}
+    \item \textbf{优点}：严格遵守"不编造内容"约束，对缺失文件选择透明标注而非虚构数据，处理流程完整符合题目要求
+    \item \textbf{不足}：与 OpenClaw 的处理存在本质差异——OpenClaw 选择创建 note4.txt 补充内容使统计完整，Qoder 选择标记缺失。Qoder 的做法更保守合规，但"纳入统计"的完整性打了折扣，高频词、行数等统计仅基于 3 个文件，实质上绕过了题目对第4个文件的统计要求
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{Qoder04.png}
+\caption{Q3 缺失文件检测与处理方案}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{Qoder05.png}
+\caption{Q3 result.csv 生成结果}
+\end{figure}
+
+\textbf{本题小结}：约束遵守能力强，但在"统计完整性"与"不编造"之间选择了更保守的一侧，与 OpenClaw 的处理思路存在明显差异。
+
+\subsection*{Q4：创建统计脚本stats.py}
+
+\textbf{题目内容}：创建 stats.py 统计 data 目录下 txt 文件的数量、总行数、总字数、出现频率最高的 5 个词，运行后输出保存为 stats.txt。
+
+\textbf{Qoder CLI 实际回答}：编写 stats.py，使用正则表达式 \texttt{[\textbackslash u4e00-\textbackslash u9fa5]+|[a-zA-Z]+} 提取词语，一次运行成功，输出：文件数量3，总行数27，总字数377，高频词：Agent(4次)、任务规划能力评测要点(1次)、任务规划是(1次)、AI(1次)、的核心能力之一(1次)。
+
+\textbf{表现分析}：
+
+\begin{itemize}
+    \item \textbf{优点}：脚本结构简洁，运行一次即成功，报告了完整的三项信息
+    \item \textbf{不足}：高频词统计结果质量明显不佳。正则将连续汉字整体提取为一个"词"，导致"任务规划能力评测要点"、"的核心能力之一"这类句子片段被计入，前4名中有3项出现频次仅为1次，失去统计意义。相比之下 OpenClaw 在遇到类似问题时主动识别并修正了正则逻辑；Qoder 运行成功后未对结果合理性进行审查便直接输出
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{Qoder06.png}
+\caption{Q4 stats.py 运行输出}
+\end{figure}
+
+\textbf{本题小结}：代码可运行，但缺乏对输出结果合理性的自我审查，高频词统计实际效果差。
+
+\subsection*{Q5：检索官方文档补充说明}
+
+\textbf{题目内容}：检索 Qoder 官方文档中关于 tools / skills / agent mode / planning 的说明，补充到 summary.md，要求优先使用官方文档，给出实际来源，不编造。
+
+\textbf{Qoder CLI 实际回答}：通过 WebSearch 定位到 docs.qoder.com 的四个页面（Using CLI、Skills、Agent Mode、Planning Agent），用 WebFetch 抓取内容后新增"官方文档补充说明"小节，每个主题附有来源链接。
+
+\textbf{表现分析}：
+
+\begin{itemize}
+    \item \textbf{优点}：来源透明，均指向官方文档的具体页面，遵守了"不编造"要求
+    \item \textbf{不足}：WebFetch 返回的内容过于概括，每个主题仅有 2-3 句高层描述（如 Agent Mode 仅提到"自主决策、环境感知、工具调用"），缺乏具体的参数说明、使用示例或配置方式，信息深度不足，对用户理解帮助有限
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{Qoder07.png}
+\caption{Q5 官方文档检索过程}
+\end{figure}
+
+\textbf{本题小结}：检索流程规范，来源可信，但信息粒度粗，内容停留在概括层面。
+
+\subsection*{Q6：Python Bug修复任务}
+
+\textbf{题目内容}：对包含4个 bug 的 score\_report.py 进行修复，正确输出应为：total:5, average:74.0, passed:4, top:Alice 95。
+
+\textbf{Qoder CLI 实际回答}：先运行原始代码触发 ValueError，分析后识别出全部4个 bug：\texttt{int()} 无法处理空值、整除截断小数、及格线判断 \texttt{>} 应为 \texttt{>=}、排序后取 \texttt{[0]} 返回最低分。逐一使用 Edit 工具修复，验证输出正确，生成 repair\_report.md。
+
+\textbf{表现分析}：
+
+\begin{itemize}
+    \item \textbf{优点}：识别并修复了全部4个 bug，优先用 Edit 工具做局部修改而非整体重写，遵守了"尽量不完全重写"的约束；修复后主动运行验证，并生成了结构清晰的 repair\_report.md 记录修复过程
+    \item \textbf{不足}：4个 bug 中的排序逻辑错误（\texttt{sorted} 后取第一个元素应为降序）属于较典型的逻辑陷阱，Qoder 在初次阅读代码时即识别出来，未实际走过一次"运行失败→分析→修复"的完整循环，对比 Q4 中未审查输出结果，这里显示出 Qoder 对代码逻辑的审查能力强于对统计结果合理性的判断
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{Qoder08.png}
+\caption{Q6 Bug修复后运行结果}
+\end{figure}
+
+\textbf{本题小结}：代码调试能力强，修复过程规范，结果完全正确。
+
+\section{Claude Code 评测分析}
+
+由于 Claude Code 主要通过 VSCode 扩展中的终端式交互完成任务，过程输出以文本结果为主，可保存的过程截图相对较少。本次评测仅保留两张关键过程截图，分别用于展示任务执行界面和执行过程片段。
+
+\subsection*{Q1：设计最小化评测环境}
+
+\textbf{题目内容}：请围绕目录 claude 设计一个最小化评测环境，用于测试 AI Agent 的任务规划、文件处理、上下文管理和错误恢复能力。要求先输出 4-6 步计划，每一步写清楚目的。
+
+\textbf{Claude Code 实际回答}：输出了 6 步计划，包括：创建 data 子目录、创建 3 个主题 txt 文件、创建 README.md 说明文件、补充 summary.md 与 result.csv。每步都有明确的目的说明。但计划输出后即停止，等待用户说"现在开始执行"才进入实际创建阶段。
+
+\textbf{回答表现分析}：
+
+\begin{itemize}
+    \item \textbf{优点}：计划结构完整，覆盖了文件创建和结果汇总的核心步骤
+    \item \textbf{不足}：输出了计划但未实际创建任何文件，与 OpenClaw 类似需要用户二次指令"现在开始执行"才推进；未使用 TodoWrite 等工具进行结构化管理（exec\_record\_01.md 显示整个执行过程未调用 TodoWrite）
+    \item \textbf{能力体现}：展现了任务分解能力，使用了 mkdir、Write 等文件操作工具
+\end{itemize}
+
+\textbf{本题小结}：任务规划能力与 OpenClaw 相近，但计划与执行之间存在断档，需要用户明确推动。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{claude1.png}
+\caption{Claude Code 执行界面与任务推进过程}
+\end{figure}
+
+\subsection*{Q2：创建txt文件与README}
+
+\textbf{题目内容}：在测试目录下创建 data 子目录和 3 个主题 txt 文件（任务规划、工具调用、记忆与上下文管理），每个 5-8 行中文，再创建 README.md 说明文件用途。要求给出进度反馈，完成后列出创建的文件。
+
+\textbf{Claude Code 实际回答}：直接执行 mkdir 创建 data 目录，然后依次 Write 创建 notes1-3.txt 和 README.md，每步完成后简短反馈（如"✅ 完成"），任务结束时列出全部文件清单。未使用 TodoWrite 进行任务追踪。
+
+\textbf{回答表现分析}：
+
+\begin{itemize}
+    \item \textbf{优点}：文件内容围绕主题展开，中文内容自然流畅，README 结构清晰；通过文件系统（mkdir、Write）完成了目录创建、文件写入
+    \item \textbf{不足}：严格对照题目要求时，notes3.txt 实际只有 4 行，不满足"每个文件 5-8 行中文"的约束，因此本题只能算部分完成；此外未使用 TodoWrite 等结构化管理工具，进度通过步骤反馈而非状态标记呈现；未主动将执行过程整理为 exec\_record md 文件，用户需在后续任务中提醒才补充（见 exec\_record\_01.md）
+\end{itemize}
+
+\textbf{本题小结}：基本完成文件创建任务，但由于 notes3.txt 行数不足，严格来说属于部分完成；同时缺乏结构化的任务管理工具使用，执行过程记录依赖手动补充。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{claude2.png}
+\caption{Claude Code 文件创建任务的执行过程截图}
+\end{figure}
+
+\subsection*{Q3：缺失文件处理与统计汇总}
+
+\textbf{题目内容}：把 note4.txt 纳入统计分析并更新 summary.md 和 result.csv。要求：文件不存在不要编造，先明确指出问题，再给修复方案，修复后继续完成任务，最后说明处理方式。
+
+\textbf{Claude Code 实际回答}：检查目录后发现 note4.txt 不存在（实际存在 notes1-3.txt，注意文件名差异），同时 summary.md 和 result.csv 也未曾创建。明确指出三处缺失后，将 note4.txt 标记为"缺失"状态，遵守"不编造内容"约束，新建 summary.md 和 result.csv，并在两个文件中保留审计痕迹。
+
+\textbf{回答表现分析}：
+
+\begin{itemize}
+    \item \textbf{优点}：处理流程完全符合题目要求——先明确问题→再给方案→修复后继续→说明处理；严格遵守"不编造内容"约束，对缺失文件透明标注而非虚构；生成的 result.csv 格式规范
+    \item \textbf{不足}：在"统计完整性"与"不编造"之间选择了更保守的一侧（标记缺失），与 OpenClaw 选择创建文件补充内容的做法形成对比；缺失文件的 line\_count=0 导致统计表不完整
+\end{itemize}
+
+\textbf{本题小结}：约束遵守意识强，处理流程规范完整，是三个 Agent 中对"不编造"要求响应最彻底的一个。
+
+\subsection*{Q4：创建统计脚本stats.py}
+
+\textbf{题目内容}：创建 stats.py 统计 data 目录下 txt 文件的数量、总行数、总字数、出现频率最高的 5 个词，运行后输出保存为 stats.txt。
+
+\textbf{Claude Code 实际回答}：编写 stats.py，使用正则表达式 \texttt{[\textbackslash u4e00-\textbackslash u9fa5]+|[a-zA-Z]+} 提取词语，一次运行成功，输出：文件数量3，总行数14，总字数115，高频词：任务(3次)、工具(2次)、记忆(2次)、上下文(2次)、管理(2次)。
+
+\textbf{回答表现分析}：
+
+\begin{itemize}
+    \item \textbf{优点}：脚本结构简洁，一次运行即成功，输出格式清晰；统计数字准确（与手动验证一致）；备注中说明了正则提取的是连续汉字片段而非精确词语，体现了对统计方法局限性的认知
+    \item \textbf{不足}：高频词质量欠佳——正则将连续汉字整体提取，导致"任务规划"、"记忆与上下文管理"等完整语义单元被拆分统计；运行成功后未对结果合理性进行自我审查
+\end{itemize}
+
+\textbf{本题小结}：代码可运行、输出正确，但对统计结果缺乏合理性验证意识，高频词实际参考价值有限。
+
+\subsection*{Q5：检索官方文档补充说明}
+
+\textbf{题目内容}：检索 Qoder 官方文档中关于 tools / skills / agent mode / planning 的说明，补充到 summary.md，要求优先使用官方文档，给出实际来源，不编造。
+
+\textbf{Claude Code 实际回答}：通过 WebSearch 定位到 docs.qoder.com 的四个页面（Using CLI、Skills、Agent Mode、Planning Agent），用 WebFetch 抓取内容后新增"官方文档补充说明"小节，每个主题附有来源链接。
+
+\textbf{回答表现分析}：
+
+\begin{itemize}
+    \item \textbf{优点}：检索流程规范，来源明确指向官方文档具体页面，遵守了"不编造"要求
+    \item \textbf{不足}：WebFetch 返回的内容停留在 2-3 句概括层面（如 Agent Mode 仅"自主决策、环境感知、工具调用"九个字），缺乏具体参数、使用示例或配置方式，信息深度不足
+\end{itemize}
+
+\textbf{本题小结}：信息检索流程规范，来源透明可信，但内容概括性过强，具体参考价值有限。
+
+\subsection*{Q6：Python Bug修复任务}
+
+\textbf{题目内容}：对包含4个 bug 的 score\_report.py 进行修复，正确输出应为：total:5, average:74.0, passed:4, top:Alice 95。
+
+\textbf{Claude Code 实际回答}：先运行原始代码触发 ValueError，分析后识别出全部4个 bug 并制作了清晰的对照表格：int() 无法处理空值（程序崩溃）、整除//截断小数（74.0→74）、及格线用>而非>=（passed:3→4）、排序后取[0]返回最低分（top:Charlie 45→Alice 95）。逐一使用 Edit 工具做最小化修改，运行验证输出完全正确，生成 repair\_report.md 详细记录修复过程。
+
+\textbf{回答表现分析}：
+
+\begin{itemize}
+    \item \textbf{优点}：bug 识别系统性强——不仅指出错误还说明了影响范围；使用表格形式呈现分析结果，结构清晰；严格遵守"尽量不完全重写"约束，全部修改均为局部 Edit；修复后主动运行验证；生成 repair\_report.md 完整记录修复过程
+    \item \textbf{不足}：4个 bug 均为独立的局部逻辑错误，复杂度有限；未主动说明"为什么 Frank 和 Grace 被过滤"的数据处理决策
+\end{itemize}
+
+\textbf{本题小结}：是本次 Claude Code 评测中表现最突出的任务，bug 分析系统、修复精准、文档完整。
+\subsection{OpenClaw Agent 评测总结}
+
+从 Q1-Q7 共7道题的测试结果来看，OpenClaw Agent 的整体表现较好，但各题难度和完成度存在差异。
+
+\textbf{优点}：
+
+\begin{itemize}
+    \item Q2、Q3、Q4、Q5、Q6、Q7 均完全按要求完成任务
+    \item 错误识别和自主纠错能力突出：Q4 主动检查文件是否存在，Q5 根据输出反馈修正代码，Q7 成功修复4个 bug
+    \item "先规划后执行"的习惯较好：Q1 先输出计划，Q4 按流程处理问题
+    \item 执行透明度高：任务进度有明确反馈（如"正在创建...已创建"）
+    \item 上下文保持能力较好：多轮对话中能正确引用前序任务生成的文件（Q3 基于 Q2 的 summary.md 回答问题，Q4 在 Q2、Q3 基础上更新文件）
+\end{itemize}
+
+\textbf{不足}：
+
+\begin{itemize}
+    \item Q1 虽然输出了计划但未实际创建可用数据，与用户期望有偏差
+    \item Q5 第一次编写脚本时未考虑周全，需要二次修正
+\end{itemize}
+
+\textbf{总体评价}：7道题中，6道完全按要求完成，1道部分完成。核心能力（任务规划、工具使用、上下文保持、自主纠错）基本具备，但在任务理解精准度上仍有提升空间。
+
+\subsection{Qoder CLI 评测总结}
+
+从 Q1-Q6 共6道题的测试结果来看，Qoder CLI 的整体表现优秀。
+
+\textbf{优点}：
+
+\begin{itemize}
+    \item Q2、Q3、Q4、Q5、Q6 均完全按要求完成任务
+    \item 任务管理规范：主动使用 TodoWrite 工具追踪任务进度，执行透明度高
+    \item 错误处理能力强：Q3 严格遵循"不编造内容"约束，透明记录缺失状态
+    \item 代码能力稳定：Q4 脚本一次运行成功，Q6 成功修复全部 4 个 bug
+    \item 文档检索规范：Q5 从官方文档获取内容，来源透明可追溯
+    \item 执行记录完整：每次任务完成后自动生成 md 执行记录文件
+\end{itemize}
+
+\textbf{不足}：
+
+\begin{itemize}
+    \item Q1 与 OpenClaw 类似，输出了计划但未直接执行创建
+\end{itemize}
+
+\textbf{总体评价}：6道题中，5道完全按要求完成，1道部分完成。核心能力全面，任务管理规范，执行透明度高。
+
+\subsection{Claude Code 评测总结}
+
+从 Q1-Q6 共6道题的测试结果来看，Claude Code 在部分任务上表现突出，整体表现与 Qoder 相近。
+
+\textbf{优点}：
+
+\begin{itemize}
+    \item Q3、Q4、Q5、Q6 均按要求完成任务
+    \item Bug 修复能力突出：Q6 中 bug 分析系统性强，使用表格清晰呈现问题与影响，修复精准，文档完整，是本次评测中 Claude Code 表现最好的单项
+    \item 错误处理规范：Q3 严格遵守"不编造内容"约束，处理流程完整，是三个 Agent 中对约束响应最彻底的一个
+    \item 上下文保持良好：在连续多题测试中能正确引用前序文件和分析结果
+\end{itemize}
+
+\textbf{不足}：
+
+\begin{itemize}
+    \item Q1 与 OpenClaw 和 Qoder 相同，输出计划后等待用户二次指令才执行
+    \item Q2 中 notes3.txt 实际只有 4 行，不满足题目要求的 5-8 行中文，完成度判断应下调为部分完成
+    \item 缺乏结构化任务管理：未使用 TodoWrite，进度依赖步骤反馈而非状态标记；执行记录依赖用户提醒才补充
+    \item 结果自检能力不足：Q4 高频词统计质量差但未自我审查；Q5 WebFetch 内容概括性过强
+\end{itemize}
+
+\textbf{总体评价}：6道题中4道按要求完成，2道部分完成。核心优势在于 bug 修复的系统性分析和错误处理流程的规范性，需加强执行主动性、约束细节落实和结果自检能力。
+
+\subsection{对比分析}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{能力维度} & \textbf{OpenClaw Agent} & \textbf{Qoder CLI} & \textbf{Claude Code} \\
+\hline
+任务规划 & 良好，计划清晰 & 良好，计划清晰 & 良好，计划清晰 \\
+\hline 任务管理 & 有进度反馈 & 优秀，TodoWrite 追踪 & 一般，依赖步骤反馈 \\
+\hline 错误处理 & 良好，主动纠错 & 优秀，严格约束遵守 & 优秀，规范且透明 \\
+\hline 代码编写 & 良好，需二次修正 & 优秀，一次成功 & 优秀，一次成功 \\
+\hline 文档检索 & 良好，来源透明 & 良好，来源透明 & 良好，来源透明 \\
+\hline Bug修复 & 优秀，全量修复 & 优秀，全量修复 & 优秀，分析系统性强 \\
+\hline 执行主动性 & 一般，需二次指令 & 一般，需二次指令 & 一般，需二次指令 \\
+\hline
+\end{tabular}
+\end{table}
+
+\textbf{综合排名}：
+\begin{enumerate}
+    \item \textbf{Qoder CLI}：综合表现最均衡。任务规划、进度追踪、约束遵守和代码修复能力都较稳定，虽然在结果自检和文档检索深度上仍有不足，但整体完成度和过程规范性最高。
+    \item \textbf{Claude Code}：在 bug 修复的系统性分析、错误处理流程和多文件编辑方面表现突出，但执行主动性不足，且 Q2 存在细节约束未完全满足的问题，因此综合排名次于 Qoder。
+    \item \textbf{OpenClaw Agent}：在错误识别、自主纠错和上下文延续方面表现良好，但部分任务更偏向框架设计，执行落地性和过程证据完整性相对弱于前两者，因此排在第三。
+\end{enumerate}
+
+\textbf{综合结论}：三个 Agent 在核心能力上都达到了可用水平，均具备任务规划、工具调用、上下文管理、错误恢复等基本能力，但在表现风格上存在明显差异。Qoder CLI 的优势在于任务管理规范、执行透明且整体稳定性最好；Claude Code 的优势在于代码修复分析系统、文件操作精细，但需加强主动推进和细节约束落实；OpenClaw Agent 的优势在于自主纠错和多轮上下文保持，但在部分任务上更偏方案设计而非直接落地。三者的共同短板是执行主动性不足，均存在"规划后等待二次指令"的现象。
+
+\end{document}

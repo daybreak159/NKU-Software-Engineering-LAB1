@@ -1,0 +1,5 @@
+filename,status,theme,line_count,notes
+notes1.txt,存在,任务规划,10,评测任务分解与执行顺序
+notes2.txt,存在,工具调用,10,评测工具选择与参数构造
+notes3.txt,存在,记忆与上下文管理,10,评测跨轮信息保持能力
+note4.txt,缺失,未知,0,文件不存在，未编造内容
