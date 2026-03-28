@@ -4,7 +4,7 @@
 
 ## 内容
 
-- **exec_records/** — Q1-Q5 共 9 个 md 文件，每题包含用户指令和执行过程
+- **exec_records/** — Q1-Q7 共 7 个 md 文件，每题包含用户指令和执行过程
 - **data/** — 测试数据（notes1-3.txt 三个主题文件）
 - **README.md** — 本文件
 
